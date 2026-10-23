@@ -6,7 +6,13 @@ An interactive GIS operations dashboard concept for vegetation maintenance and w
 
 ## Preview
 
-The dashboard opens to a District 8 map with schematic major corridors, synthetic maintenance points, and illustrative exposure areas. New simulated events arrive in the browser about every 3.6 seconds. Use **Pause stream** to stop them. Map filters update the visible work locations and priority queue. **Export data** downloads the visible work locations as GeoJSON in WGS 84.
+These interface preview renders show the dashboard layout, illustrative map layers, exposure summary, priority queue, activity trend, and synthetic event feed. They are portfolio visuals, not captures of a live Caltrans system. Every displayed location, work order, risk area, metric, and event is synthetic or schematic.
+
+![Dashboard overview preview](screenshots/dashboard-overview.png)
+
+![Map and priority queue preview](screenshots/map-and-priority-queue.png)
+
+The running dashboard opens to a District 8 map with schematic major corridors, synthetic maintenance points, and illustrative exposure areas. New simulated events arrive in the browser about every 3.6 seconds. Use **Pause stream** to stop them. Map filters update the visible work locations and priority queue. **Export data** downloads the visible work locations as GeoJSON in WGS 84.
 
 ## Features
 
