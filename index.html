@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1b25">
+  <meta name="description" content="A live GIS operations dashboard concept for vegetation maintenance and wildfire readiness in Caltrans District 8. Uses synthetic demonstration data.">
+  <title>District 8 | Vegetation & Wildfire Operations</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://basemaps.cartocdn.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--ink:#13232d;--muted:#71808a;--line:#e6ebec;--paper:#fff;--canvas:#f2f5f4;--navy:#0d1b25;--navy2:#152a36;--green:#1b735c;--mint:#dff3eb;--amber:#d79024;--red:#ce5945;--blue:#538ab5;--shadow:0 8px 28px rgba(24,43,49,.08)}
+    *{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px}button,select,input{font:inherit}button{cursor:pointer}
+    .topbar{height:70px;background:var(--navy);color:#fff;display:flex;align-items:center;padding:0 30px;gap:24px;box-shadow:0 3px 15px #09131a35;position:relative;z-index:20}.brand{display:flex;align-items:center;gap:12px;min-width:310px}.brand-mark{height:38px;width:38px;border:1px solid #527065;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#1e755b,#153c38);font-size:20px}.brand-title{font-size:15px;font-weight:750;letter-spacing:.01em}.brand-sub{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#a9bbb9;margin-top:2px}.topnav{display:flex;align-items:center;gap:8px;flex:1}.topnav button{color:#afbec3;background:none;border:0;padding:10px 13px;border-radius:7px;font-size:12px}.topnav button.active,.topnav button:hover{color:#fff;background:#ffffff12}.top-right{display:flex;align-items:center;gap:17px}.stream-state{display:flex;align-items:center;gap:8px;color:#dce9e3;font-size:11px}.pulse{height:8px;width:8px;background:#45d49b;border-radius:99px;box-shadow:0 0 0 4px #45d49b20;animation:pulse 1.8s infinite}@keyframes pulse{50%{box-shadow:0 0 0 7px #45d49b08}}.avatar{height:32px;width:32px;border-radius:50%;display:grid;place-items:center;background:#294250;color:#d7e8df;font-size:11px;font-weight:700}
+    .page{max-width:1600px;margin:auto;padding:24px 30px 28px}.page-head{display:flex;justify-content:space-between;align-items:flex-end;margin:0 0 18px;gap:20px}.eyebrow{color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:.11em;font-size:10px;margin-bottom:7px}.page h1{font-size:25px;line-height:1.15;letter-spacing:-.035em;margin:0;font-weight:740}.page-desc{color:var(--muted);font-size:12px;margin-top:7px}.head-actions{display:flex;align-items:center;gap:9px}.date-pill,.button{border:1px solid #dbe3e3;background:#fff;color:#344650;border-radius:7px;padding:9px 12px;font-size:11px;box-shadow:0 1px 2px #122b3508}.date-pill{white-space:nowrap}.button{font-weight:650;transition:.18s}.button:hover{border-color:#a9bcb6;transform:translateY(-1px)}.button.primary{background:var(--green);color:white;border-color:var(--green)}.button.dark{background:#17323b;color:#fff;border-color:#17323b}.button.icon{padding:8px 10px}
+    .notice{display:flex;align-items:center;gap:9px;background:#fff8e8;border:1px solid #f0dfb9;color:#70551b;border-radius:8px;padding:9px 12px;font-size:11px;margin-bottom:15px}.notice b{font-weight:750}.notice .badge{margin-left:auto;white-space:nowrap;text-transform:uppercase;letter-spacing:.09em;font-size:9px;font-weight:750;color:#8b6a20}
+    .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:14px}.kpi{background:var(--paper);border:1px solid #e8eded;border-radius:10px;padding:15px 16px;box-shadow:0 2px 9px #0d293307;min-height:101px;position:relative;overflow:hidden}.kpi:after{content:"";position:absolute;right:-16px;top:-22px;height:68px;width:68px;border-radius:50%;background:var(--tint,#eef6f2)}.kpi-top{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;color:#6f7d84;font-size:10px;font-weight:650}.kpi-icon{height:25px;width:25px;border-radius:7px;background:var(--tint,#eef6f2);color:var(--tone,var(--green));display:grid;place-items:center;font-size:14px}.kpi-value{font-size:25px;font-weight:760;letter-spacing:-.04em;margin-top:6px;line-height:1}.kpi-foot{font-size:10px;color:#87949a;margin-top:6px}.delta{color:var(--green);font-weight:700}
+    .main-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:stretch}.map-card,.side-card,.bottom-card{background:#fff;border:1px solid #e5ebeb;border-radius:10px;box-shadow:0 2px 9px #0d293307;overflow:hidden}.map-card{min-width:0}.map-head{min-height:56px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:12px}.map-title{font-size:12px;font-weight:730}.map-sub{font-size:10px;color:var(--muted);margin-top:3px}.map-tools{display:flex;align-items:center;gap:7px}.select{border:1px solid #e0e7e7;border-radius:6px;background:#fff;color:#51626a;padding:7px 9px;font-size:10px;max-width:155px}.map-wrap{position:relative;height:485px;background:#e9efec}.map{height:100%;width:100%;z-index:1}.map-legend{position:absolute;z-index:500;left:14px;bottom:14px;background:#fffefdf0;backdrop-filter:blur(8px);border:1px solid #e4e9e7;border-radius:8px;padding:10px 12px;box-shadow:var(--shadow);font-size:9px;color:#53636a}.legend-title{font-weight:750;color:#263943;margin-bottom:7px}.legend-row{display:flex;align-items:center;gap:7px;margin:5px 0}.dot{width:8px;height:8px;border-radius:50%;display:inline-block}.legend-line{height:3px;width:16px;background:#cb694c;border-radius:3px}.legend-zone{height:10px;width:14px;background:#e9a53833;border:1px solid #df9a23;border-radius:2px}.scale-tag{position:absolute;right:14px;top:14px;z-index:500;background:#fffffff0;border:1px solid #e4e9e7;padding:7px 9px;border-radius:6px;font-size:9px;color:#63727a}.leaflet-control-attribution{font-size:8px!important}.leaflet-popup-content-wrapper{border-radius:9px!important}.leaflet-popup-content{font:11px/1.5 Inter,system-ui,sans-serif!important;margin:11px 13px!important}.popup-title{font-weight:750;color:#1d343e}.popup-meta{color:#64737a}.map-footer{padding:8px 13px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:9px;color:#829096}.map-footer strong{color:#52646b;font-weight:700}
+    .side-column{display:flex;flex-direction:column;gap:14px;min-width:0}.side-card{padding:14px 14px 10px}.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.card-title{font-size:12px;font-weight:740}.card-link{border:0;background:none;color:var(--green);font-size:10px;font-weight:700}.risk-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px}.risk-box{border-radius:8px;padding:10px;background:#fafbfa;border:1px solid #edf0ef}.risk-box .label{color:#7b888c;font-size:9px}.risk-box .number{font-size:19px;font-weight:750;margin-top:4px}.risk-box .caption{font-size:9px;color:#8d9899;margin-top:2px}.risk-box.high{background:#fff8f5;border-color:#f6e2da}.risk-box.high .number{color:#be513b}.risk-box.medium .number{color:#be8125}.risk-bar{height:5px;border-radius:9px;background:#edf0ee;margin-top:9px;overflow:hidden}.risk-bar i{display:block;height:100%;width:56%;background:linear-gradient(90deg,#e4b746,#ce5b43);border-radius:9px}.work-list{display:flex;flex-direction:column;gap:0}.work-row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 0;border-top:1px solid #eff2f1;cursor:pointer}.work-row:hover .work-name{color:var(--green)}.work-ico{height:23px;width:23px;border-radius:7px;background:#e9f4ee;color:#267258;display:grid;place-items:center;font-size:11px}.work-name{font-weight:670;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.work-location{font-size:9px;color:#819096;margin-top:3px}.status{padding:4px 6px;border-radius:99px;font-size:8px;font-weight:700;white-space:nowrap}.status.active{color:#237459;background:#e5f4ed}.status.queued{color:#8c681e;background:#faf1db}.status.complete{color:#57717e;background:#edf2f4}.empty{text-align:center;padding:18px 0;color:#889498;font-size:10px}
+    .bottom-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:14px;margin-top:14px}.bottom-card{padding:14px 15px 11px;min-height:204px}.bottom-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}.bottom-sub{font-size:9px;color:#879397;margin-top:4px}.chart-wrap{height:132px}.feed{display:flex;flex-direction:column;gap:0;max-height:143px;overflow:auto}.feed-row{display:grid;grid-template-columns:9px 1fr auto;gap:8px;align-items:start;border-top:1px solid #eff2f1;padding:8px 0}.feed-bullet{height:7px;width:7px;border-radius:50%;background:#429273;margin-top:3px}.feed-bullet.warning{background:#d39331}.feed-bullet.alert{background:#cf5c46}.feed-text{font-size:9px;color:#53636a;line-height:1.45}.feed-text strong{color:#263943;font-weight:700}.feed-time{font-size:8px;color:#97a1a4;white-space:nowrap}.footer{display:flex;justify-content:space-between;align-items:center;color:#8a979b;font-size:9px;padding:14px 2px 0}.footer a{color:#57746b;text-decoration:none}.footer a:hover{text-decoration:underline}.live-clock{font-variant-numeric:tabular-nums}
+    .leaflet-tooltip{font-size:9px!important;padding:4px 7px!important;border:0!important;box-shadow:0 2px 8px #102c3430!important;border-radius:5px!important}.leaflet-tooltip:before{display:none}.leaflet-div-icon{background:transparent;border:0}.work-marker{height:22px;width:22px;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 8px #172d3450;display:grid;place-items:center;color:#fff;font-size:9px;font-weight:800}.work-marker.high{background:#cf5b45}.work-marker.medium{background:#d8962c}.work-marker.low{background:#2c8b69}.live-marker{animation:liveHalo 2s infinite}@keyframes liveHalo{0%{box-shadow:0 0 0 0 #2e9e7450,0 2px 8px #172d3450}70%{box-shadow:0 0 0 9px #2e9e7400,0 2px 8px #172d3450}100%{box-shadow:0 0 0 0 #2e9e7400,0 2px 8px #172d3450}}
+    @media(max-width:1120px){.main-grid{grid-template-columns:minmax(0,1fr) 290px}.topnav{display:none}.brand{flex:1}.kpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:800px){.topbar{padding:0 16px}.brand{min-width:0}.page{padding:18px 14px}.main-grid{grid-template-columns:1fr}.side-column{display:grid;grid-template-columns:1fr 1fr}.map-wrap{height:430px}.bottom-grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.page-head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}}@media(max-width:520px){.brand-sub{font-size:8px}.top-right{gap:10px}.stream-state{font-size:0}.page h1{font-size:22px}.side-column{grid-template-columns:1fr}.map-head{align-items:flex-start;flex-direction:column}.map-tools{width:100%;justify-content:space-between}.map-wrap{height:370px}.kpi{padding:12px}.kpi-value{font-size:22px}.notice{align-items:flex-start}.notice .badge{display:none}.date-pill{font-size:9px}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">⌁</div><div><div class="brand-title">District 8 Operations</div><div class="brand-sub">Vegetation & Wildfire Management</div></div></div>
+    <nav class="topnav" aria-label="Main navigation"><button class="active">Overview</button><button id="nav-work">Work activity</button><button id="nav-risk">Risk layers</button><button id="nav-reports">Reports</button></nav>
+    <div class="top-right"><div class="stream-state"><span class="pulse" id="connection-dot"></span><span id="connection-label">LIVE SIMULATION</span></div><div class="avatar">JB</div></div>
+  </header>
+  <main class="page">
+    <div class="page-head">
+      <div><div class="eyebrow">Maintenance intelligence · District 8</div><h1>Vegetation & wildfire operations</h1><div class="page-desc">A live spatial view of roadside work, exposure, and field activity across the Inland Empire.</div></div>
+      <div class="head-actions"><div class="date-pill">◷ &nbsp;<span id="date-range">Today · Live window</span></div><button class="button" id="pause-btn">Ⅱ &nbsp; Pause stream</button><button class="button primary" id="export-btn">↓ &nbsp; Export data</button></div>
+    </div>
+    <div class="notice"><span>ⓘ</span><span><b>Demonstration environment.</b> All work orders, risk areas, and live events are synthetic and are not Caltrans operational records.</span><span class="badge">Synthetic data</span></div>
+    <section class="kpis" aria-label="Operations summary">
+      <article class="kpi" style="--tint:#e7f4ed;--tone:#207356"><div class="kpi-top"><span>WORK ORDERS · 30D</span><span class="kpi-icon">▤</span></div><div class="kpi-value" id="kpi-orders">—</div><div class="kpi-foot"><span class="delta" id="kpi-order-delta">+8%</span> vs. prior period</div></article>
+      <article class="kpi" style="--tint:#fff0df;--tone:#b47c24"><div class="kpi-top"><span>ACRES TREATED</span><span class="kpi-icon">⌖</span></div><div class="kpi-value" id="kpi-acres">—</div><div class="kpi-foot">Across active maintenance zones</div></article>
+      <article class="kpi" style="--tint:#fff0ec;--tone:#c85e47"><div class="kpi-top"><span>HIGH-RISK CORRIDORS</span><span class="kpi-icon">△</span></div><div class="kpi-value" id="kpi-corridors">—</div><div class="kpi-foot">Within 1 mile of a risk zone</div></article>
+      <article class="kpi" style="--tint:#eaf1f7;--tone:#4d82a7"><div class="kpi-top"><span>ON-TIME COMPLETION</span><span class="kpi-icon">✓</span></div><div class="kpi-value" id="kpi-ontime">—</div><div class="kpi-foot">Completed within planned window</div></article>
+      <article class="kpi" style="--tint:#e9f3f0;--tone:#2e8070"><div class="kpi-top"><span>STREAM EVENTS</span><span class="kpi-icon">⌁</span></div><div class="kpi-value" id="kpi-events">0</div><div class="kpi-foot"><span class="delta">●</span> Updates in this session</div></article>
+    </section>
+    <section class="main-grid">
+      <article class="map-card">
+        <div class="map-head"><div><div class="map-title">District map · Inland Empire</div><div class="map-sub">Maintenance activity, corridors, and illustrative vegetation exposure</div></div><div class="map-tools"><select class="select" id="activity-filter" aria-label="Filter by activity"><option value="all">All activity types</option><option value="Brush clearing">Brush clearing</option><option value="Fuel reduction">Fuel reduction</option><option value="Tree trimming">Tree trimming</option><option value="Fire break">Fire break</option><option value="Debris removal">Debris removal</option></select><select class="select" id="status-filter" aria-label="Filter by status"><option value="all">All work status</option><option value="In progress">In progress</option><option value="Queued">Queued</option><option value="Complete">Complete</option></select><button class="button icon" id="fit-btn" title="Fit map to district">⤢</button></div></div>
+        <div class="map-wrap"><div id="map" class="map" role="application" aria-label="Interactive map showing synthetic vegetation work activity and illustrative exposure zones"></div><div class="scale-tag">District 8 · Illustrative extent</div><div class="map-legend"><div class="legend-title">MAP KEY</div><div class="legend-row"><span class="dot" style="background:#cf5b45"></span> High priority work</div><div class="legend-row"><span class="dot" style="background:#d8962c"></span> Moderate priority</div><div class="legend-row"><span class="dot" style="background:#2c8b69"></span> Standard work</div><div class="legend-row"><span class="legend-zone"></span> Illustrative exposure zone</div><div class="legend-row"><span class="legend-line"></span> Major corridor (schematic)</div></div></div>
+        <div class="map-footer"><span>Coordinate display: <strong>WGS 84 · EPSG:4326</strong></span><span><strong id="map-count">—</strong> visible work locations</span><span>Basemap © OpenStreetMap contributors</span></div>
+      </article>
+      <aside class="side-column">
+        <article class="side-card"><div class="card-head"><div class="card-title">Exposure snapshot</div><button class="card-link" id="toggle-risk">Hide zones</button></div><div class="risk-summary"><div class="risk-box high"><div class="label">HIGH EXPOSURE</div><div class="number" id="high-risk">—</div><div class="caption">illustrative acres</div></div><div class="risk-box medium"><div class="label">MODERATE</div><div class="number" id="mod-risk">—</div><div class="caption">illustrative acres</div></div></div><div class="risk-bar"><i></i></div><div style="display:flex;justify-content:space-between;font-size:9px;color:#859195;margin-top:6px"><span>Focus areas with planned work</span><b style="color:#55666c">56%</b></div></article>
+        <article class="side-card" style="flex:1"><div class="card-head"><div class="card-title">Priority work queue</div><button class="card-link" id="show-all">View map ↓</button></div><div class="work-list" id="work-list"></div></article>
+      </aside>
+    </section>
+    <section class="bottom-grid">
+      <article class="bottom-card"><div class="bottom-head"><div><div class="card-title">Maintenance activity trend</div><div class="bottom-sub">Work orders created · rolling hourly view</div></div><div class="date-pill" style="padding:6px 8px;font-size:9px">Last 12 hours</div></div><div class="chart-wrap"><canvas id="trend-chart" aria-label="Chart of work orders by hour"></canvas></div></article>
+      <article class="bottom-card"><div class="bottom-head"><div><div class="card-title">Live activity feed</div><div class="bottom-sub">Recent changes from the synthetic event stream</div></div><span class="status active"><span class="pulse" style="height:6px;width:6px;display:inline-block;margin-right:4px"></span> STREAMING</span></div><div class="feed" id="feed"></div></article>
+    </section>
+    <footer class="footer"><span>District 8 Vegetation & Wildfire GIS · Portfolio demonstration</span><span>Last updated <b class="live-clock" id="last-updated">—</b> · <a href="https://github.com/Jashwanth248/District-8-Vegetation-Wildfire-GIS-Dashboard" target="_blank" rel="noreferrer">Source on GitHub ↗</a></span></footer>
+  </main>
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const activityTypes = ['Brush clearing','Fuel reduction','Tree trimming','Fire break','Debris removal'];
+      const roads = ['I-10','I-15','I-40','SR-210','SR-18','SR-330','SR-38','SR-60'];
+      const cities = ['San Bernardino','Riverside','Fontana','Ontario','Redlands','Rancho Cucamonga','Victorville','Barstow','Yucaipa','Colton'];
+      const names = ['Cajon Pass North','Santa Ana River Wash','Etiwanda Foothills','Lytle Creek Access','San Timoteo Canyon','Banning Pass East','Devore Cut Slope','Highland Avenue Verge','Jurupa Valley Edge','Mojave Approach'];
+      const statusValues = ['In progress','Queued','Complete'];
+      const records = [];
+      let eventCount = 0, paused = false, showRisk = true;
+      let activeActivity = 'all', activeStatus = 'all';
+      const now = new Date();
+      const baseTime = now.getTime();
+      const map = L.map('map',{zoomControl:false,preferCanvas:true}).setView([34.12,-117.30],8);
+      L.control.zoom({position:'bottomright'}).addTo(map);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap contributors © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+      const corridors = L.layerGroup().addTo(map);
+      const zoneLayer = L.layerGroup().addTo(map);
+      const markerLayer = L.layerGroup().addTo(map);
+      const corridorLines = [
+        {name:'I-10',coords:[[34.01,-117.66],[34.04,-117.51],[34.05,-117.38],[34.06,-117.25],[34.06,-117.12],[34.08,-116.94],[34.07,-116.80]]},
+        {name:'I-15',coords:[[34.00,-117.57],[34.08,-117.51],[34.17,-117.49],[34.25,-117.50],[34.35,-117.52],[34.48,-117.51],[34.62,-117.48]]},
+        {name:'I-40',coords:[[34.88,-117.02],[34.90,-116.78],[34.91,-116.55],[34.91,-116.33],[34.91,-116.10]]},
+        {name:'SR-210',coords:[[34.13,-117.62],[34.14,-117.48],[34.15,-117.34],[34.15,-117.20],[34.16,-117.07],[34.17,-116.94]]},
+        {name:'SR-18',coords:[[34.10,-117.30],[34.16,-117.25],[34.22,-117.20],[34.28,-117.18],[34.35,-117.18]]},
+        {name:'SR-38',coords:[[34.04,-117.17],[34.08,-117.10],[34.11,-117.02],[34.12,-116.91],[34.13,-116.80]]}
+      ];
+      corridorLines.forEach(line => L.polyline(line.coords,{color:'#c87156',weight:3,opacity:.68,dashArray:'7 7'}).bindTooltip(line.name,{sticky:true}).addTo(corridors));
+      const zones = [
+        {center:[34.28,-117.50],radius:6700,risk:'High',acres:1280,label:'Cajon Pass · illustrative exposure'},
+        {center:[34.12,-117.07],radius:5900,risk:'High',acres:960,label:'San Bernardino foothills · illustrative'},
+        {center:[34.05,-117.63],radius:5200,risk:'Moderate',acres:740,label:'West Valley edge · illustrative exposure'},
+        {center:[34.15,-116.89],radius:7700,risk:'Moderate',acres:1120,label:'Highland interface · illustrative'},
+        {center:[34.46,-117.53],radius:6100,risk:'High',acres:880,label:'Victor Valley approach · illustrative'}
+      ];
+      zones.forEach(z => L.circle(z.center,{radius:z.radius,color:z.risk==='High'?'#ce6b46':'#d4a039',weight:1.2,fillColor:z.risk==='High'?'#e7966b':'#efd28a',fillOpacity:.22,dashArray:'4 5'}).bindPopup(`<div class="popup-title">${z.label}</div><div class="popup-meta">${z.risk} exposure · ${z.acres.toLocaleString()} illustrative acres</div>`).addTo(zoneLayer));
+      const rng=(a,b)=>Math.random()*(b-a)+a;
+      const pick=a=>a[Math.floor(Math.random()*a.length)];
+      const ago=(mins)=>new Date(Date.now()-mins*60000);
+      function makeRecord(options={}){
+        const route=pick(roads), type=pick(activityTypes), status=options.status||pick(statusValues), risk=options.risk||pick(['High','Moderate','Standard']);
+        const lat=options.lat??rng(34.00,34.54), lng=options.lng??rng(-117.65,-116.83);
+        const unit=String(Math.floor(rng(100,999)))+'-'+String(Math.floor(rng(10,99)));
+        return {id:options.id||`VM-${Math.floor(rng(24000,99999))}`,type,status,risk,route,city:pick(cities),site:pick(names),lat,lng,acres:+rng(4.2,62.8).toFixed(1),team:unit,updated:options.updated||ago(Math.floor(rng(4,480))),priority:risk==='High'?'Priority 1':risk==='Moderate'?'Priority 2':'Standard',source:'Synthetic work-order generator'};
+      }
+      function markerIcon(risk,isNew=false){return L.divIcon({className:'',html:`<div class="work-marker ${risk.toLowerCase()} ${isNew?'live-marker':''}">${risk==='High'?'!':risk==='Moderate'?'•':'+'}</div>`,iconSize:[22,22],iconAnchor:[11,11]});}
+      const markerById=new Map();
+      function popup(record){return `<div class="popup-title">${record.site}</div><div class="popup-meta">${record.id} · ${record.route} · ${record.city}<br>${record.type} · ${record.status}<br>${record.acres} acres · ${record.risk} priority</div>`;}
+      function addMarker(record,isNew=false){
+        const marker=L.marker([record.lat,record.lng],{icon:markerIcon(record.risk,isNew),title:`${record.type} at ${record.site}`}).bindPopup(popup(record));
+        marker.record=record; markerById.set(record.id,marker); return marker;
+      }
+      const seedLocations=[[34.28,-117.51],[34.09,-117.45],[34.13,-117.12],[34.03,-117.28],[34.36,-117.48],[34.18,-117.04],[34.05,-117.51],[34.25,-117.22],[34.48,-117.52],[34.09,-116.94],[34.15,-117.36],[34.06,-117.03],[34.30,-117.28],[34.12,-117.59],[34.43,-117.32],[34.21,-117.42],[34.02,-117.13],[34.27,-116.99],[34.38,-117.57],[34.11,-116.83],[34.17,-117.19],[34.04,-117.43],[34.50,-117.20],[34.24,-116.88],[34.14,-117.63],[34.32,-117.11],[34.07,-116.90],[34.46,-117.39],[34.19,-117.57],[34.09,-117.08]];
+      seedLocations.forEach((p,i)=>{const record=makeRecord({lat:p[0]+rng(-.018,.018),lng:p[1]+rng(-.018,.018),risk:i%8===0?'High':i%3===0?'Moderate':'Standard',status:i%5===0?'Queued':i%4===0?'Complete':'In progress',updated:ago(Math.floor(rng(15,900)))});records.push(record);addMarker(record).addTo(markerLayer);});
+
+      function visible(r){return(activeActivity==='all'||r.type===activeActivity)&&(activeStatus==='all'||r.status===activeStatus);}
+      function render(){
+        markerLayer.clearLayers();
+        records.filter(visible).forEach(r=>{const m=markerById.get(r.id)||addMarker(r); markerLayer.addLayer(m);});
+        $('map-count').textContent=records.filter(visible).length;
+        const total=records.length, active=records.filter(r=>r.status==='In progress').length, done=records.filter(r=>r.status==='Complete').length;
+        const acres=records.filter(r=>r.status==='Complete').reduce((s,r)=>s+r.acres,0);
+        $('kpi-orders').textContent=total.toLocaleString(); $('kpi-acres').textContent=Math.round(acres).toLocaleString();
+        $('kpi-corridors').textContent=new Set(records.filter(r=>r.risk==='High').map(r=>r.route)).size;
+        $('kpi-ontime').textContent=`${Math.min(99,Math.round(84+done/Math.max(1,total)*10))}%`;
+        $('kpi-events').textContent=eventCount.toLocaleString();
+        $('high-risk').textContent=zones.filter(z=>z.risk==='High').reduce((s,z)=>s+z.acres,0).toLocaleString();
+        $('mod-risk').textContent=zones.filter(z=>z.risk==='Moderate').reduce((s,z)=>s+z.acres,0).toLocaleString();
+        renderQueue(); updateChart(); $('last-updated').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      }
+      function renderQueue(){
+        const rows=records.filter(r=>r.risk==='High'&&r.status!=='Complete').sort((a,b)=>b.updated-a.updated).slice(0,5);
+        $('work-list').innerHTML=rows.length?rows.map(r=>`<div class="work-row" data-id="${r.id}"><div class="work-ico">${r.type==='Tree trimming'?'♧':'⌖'}</div><div><div class="work-name">${r.site}</div><div class="work-location">${r.route} · ${r.city}</div></div><span class="status ${r.status==='Queued'?'queued':'active'}">${r.status==='Queued'?'QUEUED':'ACTIVE'}</span></div>`).join(''):'<div class="empty">No priority work matches the selected filters.</div>';
+        document.querySelectorAll('.work-row').forEach(row=>row.addEventListener('click',()=>{const m=markerById.get(row.dataset.id);if(m){map.flyTo(m.getLatLng(),11,{duration:.8});m.openPopup();}}));
+      }
+      const hourCounts=Array.from({length:12},(_,i)=>({label:`${(now.getHours()-11+i+24)%24}:00`,count:Math.floor(rng(2,13))}));
+      const trend=new Chart($('trend-chart'),{type:'line',data:{labels:hourCounts.map(x=>x.label),datasets:[{data:hourCounts.map(x=>x.count),borderColor:'#278064',backgroundColor:'rgba(39,128,100,.10)',borderWidth:2,fill:true,tension:.38,pointRadius:2,pointHoverRadius:4,pointBackgroundColor:'#278064'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{displayColors:false,backgroundColor:'#132b34',padding:9,titleFont:{size:10},bodyFont:{size:10},callbacks:{label:c=>`${c.raw} work orders`}}},scales:{x:{grid:{display:false},ticks:{color:'#8c999d',font:{size:8},maxRotation:0}},y:{beginAtZero:true,grid:{color:'#edf0ef'},ticks:{color:'#8c999d',font:{size:8},precision:0},border:{display:false}}}}});
+      function updateChart(){if(!trend)return; const last=hourCounts.length-1;hourCounts[last].count+=Math.random()<.45?1:0;trend.data.datasets[0].data=hourCounts.map(x=>x.count);trend.update('none');}
+      const feedItems=[];
+      function addFeed(record,event){feedItems.unshift({record,event,time:new Date()});feedItems.splice(6);$('feed').innerHTML=feedItems.map(x=>`<div class="feed-row"><span class="feed-bullet ${x.record.risk==='High'?'alert':x.event==='Status changed'?'warning':''}"></span><div class="feed-text"><strong>${x.record.id}</strong> · ${x.event} — ${x.record.type} near ${x.record.city}</div><span class="feed-time">${x.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span></div>`).join('');}
+      function nextEvent(){
+        if(paused)return;
+        const event=Math.random();
+        if(event<.56||records.length<10){
+          const spot=pick([[34.28,-117.51],[34.14,-117.13],[34.07,-117.40],[34.31,-117.33],[34.17,-116.95],[34.43,-117.49],[34.04,-117.21],[34.22,-117.58],[34.12,-117.00]]);
+          const record=makeRecord({lat:spot[0]+rng(-.018,.018),lng:spot[1]+rng(-.018,.018),risk:Math.random()<.32?'High':Math.random()<.58?'Moderate':'Standard',status:'In progress',updated:new Date()});
+          records.unshift(record);const marker=addMarker(record,true);if(visible(record))marker.addTo(markerLayer);mapCountFlash();addFeed(record,'New work order');eventCount++;
+        }else{
+          const candidates=records.filter(r=>r.status!=='Complete');
+          const record=pick(candidates.length?candidates:records);record.status=Math.random()<.68?'Complete':'Queued';record.updated=new Date();
+          const marker=markerById.get(record.id);if(marker){marker.setPopupContent(popup(record));if(visible(record))marker.setIcon(markerIcon(record.risk,true));}
+          addFeed(record,'Status changed');eventCount++;
+        }
+        render();
+      }
+      function mapCountFlash(){const el=$('map-count');el.style.color='#228263';setTimeout(()=>el.style.color='',850);}
+      $('activity-filter').addEventListener('change',e=>{activeActivity=e.target.value;render();});
+      $('status-filter').addEventListener('change',e=>{activeStatus=e.target.value;render();});
+      $('pause-btn').addEventListener('click',()=>{paused=!paused;$('pause-btn').innerHTML=paused?'▶ &nbsp; Resume stream':'Ⅱ &nbsp; Pause stream';$('connection-label').textContent=paused?'STREAM PAUSED':'LIVE SIMULATION';$('connection-dot').style.background=paused?'#d69b35':'';});
+      $('toggle-risk').addEventListener('click',()=>{showRisk=!showRisk;if(showRisk)zoneLayer.addTo(map);else map.removeLayer(zoneLayer);$('toggle-risk').textContent=showRisk?'Hide zones':'Show zones';});
+      $('fit-btn').addEventListener('click',()=>map.fitBounds([[33.95,-117.73],[34.96,-115.92]],{padding:[18,18]}));
+      $('show-all').addEventListener('click',()=>map.fitBounds([[33.95,-117.73],[34.96,-115.92]],{padding:[18,18]}));
+      $('nav-risk').addEventListener('click',()=>{if(!showRisk)$('toggle-risk').click();map.fitBounds([[33.95,-117.73],[34.96,-115.92]],{padding:[18,18]});});
+      $('nav-work').addEventListener('click',()=>$('work-list').scrollIntoView({behavior:'smooth',block:'center'}));
+      $('nav-reports').addEventListener('click',()=>$('trend-chart').scrollIntoView({behavior:'smooth',block:'center'}));
+      $('export-btn').addEventListener('click',()=>{
+        const features=records.filter(visible).map(r=>({type:'Feature',geometry:{type:'Point',coordinates:[r.lng,r.lat]},properties:{work_order_id:r.id,activity_type:r.type,status:r.status,priority:r.priority,risk:r.risk,corridor:r.route,community:r.city,site:r.site,acres_treated:r.acres,last_updated:r.updated.toISOString(),data_classification:'Synthetic demonstration data'}}));
+        const geojson={type:'FeatureCollection',name:'district_8_synthetic_vegetation_work',crs:{type:'name',properties:{name:'urn:ogc:def:crs:OGC:1.3:CRS84'}},features};
+        const blob=new Blob([JSON.stringify(geojson,null,2)],{type:'application/geo+json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='district-8-vegetation-work.geojson';a.click();URL.revokeObjectURL(a.href);
+      });
+      map.fitBounds([[33.95,-117.73],[34.96,-115.92]],{padding:[18,18]});
+      render(); addFeed(records[0],'Work order refreshed');addFeed(records[1],'Inspection completed');
+      setInterval(nextEvent,3600);
+      setInterval(()=>{if(!paused){hourCounts.shift();const d=new Date();hourCounts.push({label:`${String(d.getHours()).padStart(2,'0')}:00`,count:Math.floor(rng(2,15))});trend.data.labels=hourCounts.map(x=>x.label);updateChart();$('last-updated').textContent=d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}},60000);
+    })();
+  </script>
+</body>
+</html>
